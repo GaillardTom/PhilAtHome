@@ -15,7 +15,7 @@ LEDPIN = 3
 #SETUP GPIO 
 def SetupGPIO():
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(LEDPIN, GPIO.IN)
 
 
 # MAIN LOOP FUNCTION
