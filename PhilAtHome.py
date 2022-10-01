@@ -17,7 +17,9 @@ def SetupGPIO():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(LEDPIN, GPIO.IN)
 
-
+def TemperatureSensor():
+    
+    print("Temperature Sensor")
 # MAIN LOOP FUNCTION
 def main():
     print("I love Sach")
