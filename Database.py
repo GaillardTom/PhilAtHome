@@ -1,8 +1,13 @@
 import pymongo
 from bson.objectid import ObjectId
+import os 
+
+
+
+PATH = "/data.txt"
 
 def OpenFile():
-    with open("data.txt", "r") as f:
+    with open(PATH, "r") as f:
         data = f.readline()
         data.split(" ")
         return data
@@ -24,7 +29,7 @@ def insertToDb():
     mydict = {"Day": data[0], "LightTimeToday": data[1]}
     
     x = mydb.insert_one(mydict)
-    
+    os.remove(PATH)
     return ObjectId(x.inserted_id)
 
     
