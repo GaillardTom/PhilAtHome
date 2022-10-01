@@ -3,8 +3,8 @@ import RPi.GPIO as GPIO
 import time
 import os
 from datetime import datetime
-
-
+import math
+#import ADC0832
 
 # ENVIRONMENT VARIABLES
 PASSWORD = os.environ.get("PASSWORD")
@@ -114,17 +114,20 @@ def TM1638_init():
     GPIO.setup(STB, GPIO.OUT)
     sendCommand(0x8f)
 
+
+def GetIntpart(num): 
+    _, firstNum = math.modf(num/1000%10)
+    _, secNum = math.modf(num/100%10)
+    _, thirdNum = math.modf(num/10%10)
+    _, fourthNum = math.modf(num%10)
+    return int(firstNum), int(secNum), int(thirdNum), int(fourthNum)
+
 def numberDisplay(num):
     digits = [0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f]
     sendCommand(0x40)
-    firstNum = int(num/1000%10)
-    secNum = int(num/100 % 10)
-    thirdNum = int(num/10% 10)
-    fourthNum = int(num%10)   
+    firstNum, secNum, thirdNum, fourthNum = GetIntpart(num)   
          
 
-    
-    
          
             
 def photoresistor():
