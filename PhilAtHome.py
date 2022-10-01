@@ -4,16 +4,14 @@ import time
 import os
 from datetime import datetime
 import math
-#import ADC0832
+import ADC0832
 
 # ENVIRONMENT VARIABLES
-PASSWORD = os.environ.get("PASSWORD")
-CLIENT_PHONE = "+33 7 67 02 75 15"
+CLIENT_PHONE = os.environ.get("CLIENT_PHONE")
 
 # DECLARE PIN NUMBERS HERE
 
-LEDPIN = 3
-LIGHTPIN = 4
+LEDPIN = 12
 TRIG = 23
 ECHO = 24
 
@@ -28,7 +26,7 @@ formatDay = "%d-%m-%Y"
 def SetupGPIO():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(LEDPIN, GPIO.IN)
-    GPIO.setup(TRIG, GPIO.OUT)
+    GPIO.setup(TRIG, GPIO.OUT, initial=GPIO.LOW)
     GPIO.setup(ECHO, GPIO.IN)
 
 
@@ -147,29 +145,26 @@ def numberDisplay(num):
 
 def photoresistor():
 
-    while True:
+    global light  # put the variable light as global to be changed by the method
+    light = ADC0832.getResult()  # read the light sensor
+    time.sleep(1)  # wait for 1 second
+    # print("Light: " + str(light))  # print the light sensor
 
-        global light  # put the variable light as global to be changed by the method
-        GPIO.setup(LIGHTPIN, GPIO.IN)  # set the light as input
-        light = GPIO.input(LIGHTPIN)  # read the light sensor
-        time.sleep(1)  # wait for 1 second
-        # print("Light: " + str(light))  # print the light sensor
+    if light >= 40:
+        timerStart = datetime.now().strftime(format)  # get the current time
+        dayStart = datetime.now().strftime(formatDay)  # get the current day
+    else:
 
-        if light == 1:
-            timerStart = datetime.now().strftime(format)  # get the current time
-            dayStart = datetime.now().strftime(formatDay)  # get the current day
-        else:
+        turnOnRedLight()  # turn on red light
 
-            turnOnRedLight()  # turn on red light
+        if (timerStart != None):
+            timerEnd = datetime.now().strftime(format)  # get the current time
+            dayFinish = datetime.now().strftime(formatDay)  # get the current day
 
-            if (timerStart != None):
-                timerEnd = datetime.now().strftime(format)  # get the current time
-                dayFinish = datetime.now().strftime(formatDay)  # get the current day
-
-                if (dayStart == dayFinish):
-                    lightTimeForDay = timerEnd - timerStart  # get the time the light was on for
-                    # Call the write to file function to write the data to the file
-                    WriteToFile(dayStart, lightTimeForDay)
+            if (dayStart == dayFinish):
+                lightTimeForDay = timerEnd - timerStart  # get the time the light was on for
+                # Call the write to file function to write the data to the file
+                WriteToFile(dayStart, lightTimeForDay)
 
 
 # TODO - ADD DISTANCE SENSOR AND SEND SMS WHEN DISTANCE IS LESS THAN 10CM
@@ -211,7 +206,7 @@ def destroy():
 def main():
     print("I love Sach")
     while True:
-        try: 
+        try:
             temp = temperature()
             numberDisplay(temp)
             distance = distanceSensor()
@@ -219,14 +214,15 @@ def main():
                 time = datetime.now().strftime(format)  # get the current time
                 date = datetime.now().strftime(formatDay)
                 dateTime = time + " the " + date
-                sendSMS(CLIENT_PHONE, temp,  dateTime)
+                SendSMS(CLIENT_PHONE, temp,  dateTime)
             else:
                 print("No SMS sent")
-        except: 
+        except:
             print("Error contacting user ...")
-            sendSMS(CLIENT_PHONE, temp,  dateTime, error=True)
+            SendSMS(CLIENT_PHONE, temp,  dateTime, error=True)
             time.sleep(1)
             destroy()
+
 
 if __name__ == "__main__":
     try:
