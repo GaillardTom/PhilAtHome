@@ -30,7 +30,7 @@ def SendSMS(numToSend, temp, timeDate, error=False):
     print(message.sid)
 
 def SendWeeklyLog(numToSend, timePassed):
-    messageBody = "You have spent " + str(timePassed) + " minutes with the lights on this week"
+    messageBody = "You have spent " + str(timePassed) + " with the lights on this week"
     message = client.messages \
                     .create(
                         body=messageBody,

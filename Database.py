@@ -36,7 +36,7 @@ def insertToDb():
     data = OpenFile()
 
     data = data.split(" ")  # split the data by the space
-    mydict = {"Day": data[0], "LightTimeToday": int(data[1])}
+    mydict = {"Day": data[0], "LightTimeToday": datetime.datetime.strptime(data[1], "%H:%M:%S")}
 
     x = mydb.insert_one(mydict)
     os.remove(PATH)
@@ -55,17 +55,31 @@ def FetchData():
     doc = list(
         coll.aggregate([
             {"$match": {
-                "Day": {"$gte": str(dateWeekAgo), "$lte": str(dateToday)}}},
-            {"$group": {"_id": "null", "LightTimeToday": {"$sum": "$LightTimeToday"}}}])
+                "Day": {"$gte": str(dateWeekAgo), "$lte": str(dateToday)}}}])
+            #{"$group": {"_id": "null", "LightTimeToday": {"$dateToString":{format: "%H-%M-&S"} }}}])
 
     )
-
+    #print(doc)
+    resultTime = []
+    for time in doc: 
+        timeIndividual = (time['LightTimeToday'])
+        test = datetime.datetime.strftime(timeIndividual, "%H:%M:%S").split(" ")
+        resultTime.append(datetime.datetime.strptime(test[0], "%H:%M:%S").time())
+    totalTime = datetime.timedelta(hours=0,minutes=0,seconds=0)
+    for finalTime in resultTime: 
+        h,m,s = SpliceTime(finalTime)
+        totalTime += datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s))
+    print(resultTime)
+    print("FinalTime: ", totalTime)
     time = doc[0]["LightTimeToday"]  # Get the time from the document
-
+    print("time", time)
     # Return the data
-    return time
+    return totalTime
 
-
+def SpliceTime(time): 
+    timeStr = str(time)
+    h,m,s = timeStr.split(":")
+    return h,m,s
 if __name__ == "__main__": 
     try:
         ConnToDb()
