@@ -28,7 +28,18 @@ def SendSMS(numToSend, temp, timeDate,):
 
     print(message.sid)
 
+def SendWeeklyLog(numToSend, timePassed):
+    messageBody = "You have spent " + str(timePassed) + " minutes with the lights on this week"
+    message = client.messages \
+                    .create(
+                        body=messageBody,
+                        from_='+12182506623',
+                        to=numToSend
+                    )
 
+    print(message.sid)
+    
+    
 
 
 

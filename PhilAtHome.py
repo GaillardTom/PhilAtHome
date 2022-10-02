@@ -1,13 +1,14 @@
-from SendSMS import SendSMS
+from SendSMS import SendSMS, SendWeeklyLog
 import RPi.GPIO as GPIO
 import time
 import os
-from datetime import datetime
+from datetime import date, datetime
 import math
+from Database import FetchData
+
 #import ADC0832
 
 # ENVIRONMENT VARIABLES
-PASSWORD = os.environ.get("PASSWORD")
 CLIENT_PHONE = "+33 7 67 02 75 15"
 
 # DECLARE PIN NUMBERS HERE
@@ -157,19 +158,22 @@ def photoresistor():
 
         if light == 1:
             timerStart = datetime.now().strftime(format)  # get the current time
-            dayStart = datetime.now().strftime(formatDay)  # get the current day
+            dayStart = date.today()  # get the current day
         else:
 
             turnOnRedLight()  # turn on red light
 
             if (timerStart != None):
                 timerEnd = datetime.now().strftime(format)  # get the current time
-                dayFinish = datetime.now().strftime(formatDay)  # get the current day
+                dayFinish = date.today()  # get the current day
 
                 if (dayStart == dayFinish):
                     lightTimeForDay = timerEnd - timerStart  # get the time the light was on for
                     # Call the write to file function to write the data to the file
                     WriteToFile(dayStart, lightTimeForDay)
+
+     
+
 
 
 # TODO - ADD DISTANCE SENSOR AND SEND SMS WHEN DISTANCE IS LESS THAN 10CM
@@ -194,7 +198,7 @@ def distanceSensor():
 
 def WriteToFile(day, lightTimeForDay):
     # Open the file in append & read mode ('a+')
-    f = open("lightTime.txt", "a")
+    f = open("lightTime.txt", "a+")
     # Write text to file day + time of light turned on
     f.write(day + " " + lightTimeForDay + "\n")
     # Close the file
@@ -219,12 +223,12 @@ def main():
                 time = datetime.now().strftime(format)  # get the current time
                 date = datetime.now().strftime(formatDay)
                 dateTime = time + " the " + date
-                sendSMS(CLIENT_PHONE, temp,  dateTime)
+                SendSMS(CLIENT_PHONE, temp,  dateTime)
             else:
                 print("No SMS sent")
         except: 
             print("Error contacting user ...")
-            sendSMS(CLIENT_PHONE, temp,  dateTime, error=True)
+            SendSMS(CLIENT_PHONE, temp,  dateTime, error=True)
             time.sleep(1)
             destroy()
 

@@ -22,6 +22,10 @@ def ConnToDb():
 
     return mydb
 
+# jour quon est -7 jours, prend tous les collections a partir de jour -7 a aujourd'hui et ajouter tous les temps 
+# pour display cette sem vs avez passez 
+
+
 def insertToDb():
     mydb = ConnToDb()
     data = OpenFile()
@@ -36,4 +40,12 @@ def insertToDb():
 def FetchData():
     coll = ConnToDb()
     # df = pd.DataFrame(coll)
-    doc = list(coll.find())
+    doc = list(
+        coll.aggregate([
+        {"$match": {"_id": {"$week": "$Day"}}},
+        {"$group": {"_id": "$Day", "LightTimeToday": {"$sum": "$LightTimeToday"}}}
+        ]
+    ))
+    
+    return doc
+
