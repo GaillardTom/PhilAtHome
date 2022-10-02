@@ -14,3 +14,11 @@ def CheckWeeklyLightTime():
             lightTime = lightTime + int(line[1])  # add the light time to the total light time
     print("Total light time for the week: " + str(lightTime))  # print the total light time   
     SendWeeklyLog(CLIENT_PHONE, lightTime)  # send the weekly log to the email
+
+if __name__ == "__main__": 
+    try: 
+        CheckWeeklyLightTime()
+    except Exception as e: 
+        print(e)
+        print("Error while sending SMS or checking log file")
+        exit(4)
