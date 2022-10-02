@@ -4,6 +4,8 @@ import time
 import os
 import datetime
 import math
+from Database import FetchData
+
 import ADC0832
 from datetime import date
 
@@ -216,7 +218,7 @@ def distanceSensor():
 
 def WriteToFile(day, lightTimeForDay):
     # Open the file in append & read mode ('a+')
-    f = open("lightTime.txt", "a")
+    f = open("lightTime.txt", "a+")
     # Write text to file day + time of light turned on
     f.write(day + " " + lightTimeForDay + "\n")
     # Close the file

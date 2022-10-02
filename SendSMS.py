@@ -3,8 +3,7 @@ import os
 from twilio.rest import Client
 
 
-
-#Send a SMS with the twillio API using python3
+# Send a SMS with the twillio API using python3
 
 
 # Find your Account SID and Auth Token at twilio.com/console
@@ -30,9 +29,21 @@ def SendSMS(numToSend, temp, timeDate, error=False):
 
     print(message.sid)
 
+def SendWeeklyLog(numToSend, timePassed):
+    messageBody = "You have spent " + str(timePassed) + " minutes with the lights on this week"
+    message = client.messages \
+                    .create(
+                        body=messageBody,
+                        from_='+12182506623',
+                        to=numToSend
+                    )
+
+    print(message.sid)
+    
+    
 
 
-
+    print(message.sid)
 
 
 if __name__ == "__main__":
@@ -40,8 +51,3 @@ if __name__ == "__main__":
         SendSMS("+1 438 396 4381", 25, "12:00 Sept 9 2022")
     except:
         print("Error")
-
-
-
-
-
