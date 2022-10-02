@@ -15,10 +15,12 @@ auth_token = os.environ.get("auth_token")
 client = Client(account_sid, auth_token)
 
 
-def SendSMS(numToSend, temp, timeDate,): 
-
-    messageBody = "The temperature is " + str(temp) + " degrees at " + timeDate
-
+def SendSMS(numToSend, temp, timeDate, error=False): 
+    if error:
+        messageBody = "Error: Please restart the service or contact an admin DATETIME: " + timeDate
+    else:
+        messageBody = "The temperature is " + \
+            str(temp) + " degrees at " + timeDate
     message = client.messages \
                     .create(
                         body=messageBody,
