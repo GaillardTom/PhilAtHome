@@ -60,3 +60,14 @@ def FetchData():
 
     # Return the data
     return time
+
+
+if __name__ == "__main__": 
+    try:
+        ConnToDb()
+        print("Connected to the DB")
+    except Exception as e:
+        print(e)
+        print("Could not connect to the DB")
+        exit(3)
+
