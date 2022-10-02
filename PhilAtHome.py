@@ -2,7 +2,7 @@ from SendSMS import SendSMS
 import RPi.GPIO as GPIO
 import time
 import os
-import datetime 
+import datetime
 import math
 import ADC0832
 from datetime import date
@@ -15,10 +15,10 @@ CLIENT_PHONE = os.environ.get("CLIENT_PHONE")
 LEDPIN = 12
 TRIG = 23
 ECHO = 24
-DIO = 27 # board 13
-CLK = 18 # board 12 
-STB = 17 # board 11
-LSBFIRST = 0                                                                                                                                                                                                                                                                                                                                                                                                                                          
+DIO = 27  # board 13
+CLK = 18  # board 12
+STB = 17  # board 11
+LSBFIRST = 0
 MSBFIRST = 1
 
 # Global variable that are not pin numbers
@@ -37,7 +37,6 @@ def SetupGPIO():
     GPIO.setup(LEDPIN, GPIO.OUT)  # set the red light as output
     ADC0832.setup()
     TM1638_init()
-
 
 
 def turnOnRedLight():
@@ -69,7 +68,7 @@ def readSensorForTemperature(id):
 
 def Temperature():
 
-    try: 
+    try:
         global temperature
         count = 0
         sensor = ""
@@ -82,7 +81,7 @@ def Temperature():
                 return temp  # return the temperature
         if (count == 0):
             print("No sensors found")  # Display that there is no sensor found
-    except KeyboardInterrupt: 
+    except KeyboardInterrupt:
         destroy()
 
 ######################################
@@ -121,7 +120,7 @@ def sendCommand(cmd):
 
 def TM1638_init():
     GPIO.setwarnings(False)
-    #GPIO.setmode(GPIO.BOARD)
+    # GPIO.setmode(GPIO.BOARD)
     GPIO.setup(DIO, GPIO.OUT)
     GPIO.setup(CLK, GPIO.OUT)
     GPIO.setup(STB, GPIO.OUT)
@@ -156,13 +155,14 @@ def numberDisplay(num):
 
 def photoresistor():
     timerStart = None
-    #global light  # put the variable light as global to be changed by the method
+    # global light  # put the variable light as global to be changed by the method
     light = ADC0832.getResult()  # read the light sensor
     time.sleep(1)  # wait for 1 second
     # print("Light: " + str(light))  # print the light sensor
     print("light status", light)
     if light >= 40:
-        timerStart = datetime.datetime.utcnow() - datetime.timedelta(hours=4)  # get the current time
+        timerStart = datetime.datetime.utcnow(
+        ) - datetime.timedelta(hours=4)  # get the current time
         dayStart = date.today()  # get the current day
         GPIO.output(LEDPIN, GPIO.HIGH)
     else:
@@ -190,11 +190,21 @@ def distanceSensor():
     GPIO.output(TRIG, False)
     #time.sleep(0.01)
     pulse_start = None
+    start_time = time.time() 
     while GPIO.input(ECHO) == 0:
         print("Starting pulse")
-        #if pulse_start == None:
+        
         pulse_start = time.time()
-        #pass
+        if pulse_start - start_time >= 5: 
+            GPIO.output(TRIG, False)
+            print("Waiting For Sensor To Settle")
+            time.sleep(2)
+            GPIO.output(TRIG, True)
+            time.sleep(0.00001)
+            GPIO.output(TRIG, False)
+            #time.sleep(0.01)
+            pulse_start = None
+            start_time = time.time() 
     while GPIO.input(ECHO) == 1:
         pulse_end = time.time()
     pulse_duration = pulse_end - pulse_start
@@ -214,7 +224,7 @@ def WriteToFile(day, lightTimeForDay):
 
 
 def destroy():
-    #GPIO.output(LEDPIN, GPIO.LOW)  # turn off led
+    # GPIO.output(LEDPIN, GPIO.LOW)  # turn off led
     ADC0832.destroy()
 
     GPIO.cleanup()  # Release resource
@@ -231,16 +241,18 @@ def main():
             numberDisplay(float(temp))
             distance = distanceSensor()
             photoresistor()
-            if distance < 30:
-                timeOfDay = datetime.datetime.utcnow() - datetime.timedelta(hours=4)  # get the current time
+            if distance < 10:
+                timeOfDay = datetime.datetime.utcnow(
+                ) - datetime.timedelta(hours=4)  # get the current time
                 dateResult = date.today()
                 resultDateTime = str(timeOfDay)
                 SendSMS(CLIENT_PHONE, temp,  resultDateTime)
             else:
                 print("No SMS sent")
         except:
-            timeOfDay = datetime.datetime.utcnow() - datetime.timedelta(hours=4)  # get the current time
-            dateResult = date.today() # Get the current date
+            timeOfDay = datetime.datetime.utcnow(
+            ) - datetime.timedelta(hours=4)  # get the current time
+            dateResult = date.today()  # Get the current date
             resultDateTime = str(timeOfDay)
             print("Error contacting user ...")
             SendSMS(CLIENT_PHONE, temp,  resultDateTime, error=True)
