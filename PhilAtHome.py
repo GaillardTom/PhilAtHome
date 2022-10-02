@@ -194,10 +194,12 @@ def distanceSensor():
     time.sleep(0.00001)
     GPIO.output(TRIG, False)
     #time.sleep(0.01)
+    pulse_start = None
     while GPIO.input(ECHO) == 0:
         print("Starting pulse")
+        #if pulse_start == None:
         pulse_start = time.time()
-        pass
+        #pass
     while GPIO.input(ECHO) == 1:
         pulse_end = time.time()
     pulse_duration = pulse_end - pulse_start
@@ -217,10 +219,11 @@ def WriteToFile(day, lightTimeForDay):
 
 
 def destroy():
+    #GPIO.output(LEDPIN, GPIO.LOW)  # turn off led
     ADC0832.destroy()
 
-    GPIO.output(LEDPIN, GPIO.LOW)  # turn off led
     GPIO.cleanup()  # Release resource
+    exit(1)
 
 
 # MAIN LOOP FUNCTION
