@@ -3,22 +3,23 @@ import os
 from twilio.rest import Client
 
 
-
-#Send a SMS with the twillio API using python3
+# Send a SMS with the twillio API using python3
 
 
 # Find your Account SID and Auth Token at twilio.com/console
 # and set the environment variables. See http://twil.io/secure
 
-account_sid = "AC7f6303642211a699497a29b1c6420bda"
-auth_token = "f6a636c9c495f5cf943e08f0d84c91c8"
+account_sid = os.environ.get("account_sid")
+auth_token = os.environ.get("auth_token")
 client = Client(account_sid, auth_token)
 
 
-def SendSMS(numToSend, temp, timeDate,): 
-
-    messageBody = "The temperature is " + str(temp) + " degrees at " + timeDate
-
+def SendSMS(numToSend, temp, timeDate, error=False): 
+    if error:
+        messageBody = "Error: Please restart the service or contact an admin DATETIME: " + timeDate
+    else:
+        messageBody = "The temperature is " + \
+            str(temp) + " degrees at " + timeDate
     message = client.messages \
                     .create(
                         body=messageBody,
@@ -42,6 +43,7 @@ def SendWeeklyLog(numToSend, timePassed):
     
 
 
+    print(message.sid)
 
 
 if __name__ == "__main__":
@@ -49,8 +51,3 @@ if __name__ == "__main__":
         SendSMS("+1 438 396 4381", 25, "12:00 Sept 9 2022")
     except:
         print("Error")
-
-
-
-
-

@@ -1,4 +1,4 @@
-from SendSMS import SendSMS, SendWeeklyLog
+from SendSMS import SendSMS
 import RPi.GPIO as GPIO
 import time
 import os
@@ -6,17 +6,22 @@ from datetime import date, datetime
 import math
 from Database import FetchData
 
-#import ADC0832
+import ADC0832
+from datetime import date
 
 # ENVIRONMENT VARIABLES
-CLIENT_PHONE = "+33 7 67 02 75 15"
+CLIENT_PHONE = os.environ.get("CLIENT_PHONE")
 
 # DECLARE PIN NUMBERS HERE
 
-LEDPIN = 3
-LIGHTPIN = 4
+LEDPIN = 12
 TRIG = 23
 ECHO = 24
+DIO = 27 # board 13
+CLK = 18 # board 12 
+STB = 17 # board 11
+LSBFIRST = 0                                                                                                                                                                                                                                                                                                                                                                                                                                          
+MSBFIRST = 1
 
 # Global variable that are not pin numbers
 
@@ -29,14 +34,17 @@ formatDay = "%d-%m-%Y"
 def SetupGPIO():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(LEDPIN, GPIO.IN)
-    GPIO.setup(TRIG, GPIO.OUT)
+    GPIO.setup(TRIG, GPIO.OUT, initial=GPIO.LOW)
     GPIO.setup(ECHO, GPIO.IN)
+    GPIO.setup(LEDPIN, GPIO.OUT)  # set the red light as output
+    ADC0832.setup()
+    TM1638_init()
+
 
 
 def turnOnRedLight():
 
-    GPIO.setup(LEDPIN, GPIO.OUT)  # set the red light as output
-    GPIO.output(LEDPIN, GPIO.HIGH)  # turn on red light
+    GPIO.output(LEDPIN, GPIO.LOW)  # turn on red light
 
 
 def readSensorForTemperature(id):
@@ -63,19 +71,21 @@ def readSensorForTemperature(id):
 
 def Temperature():
 
-    global temperature
-    count = 0
-    sensor = ""
-    for file in os.listdir("/sys/bus/w1/devices"):
-        if file.startswith("28-"):
-            count = count + 1  # increment the count by 1
-            # read the temperature of the sensor
-            temp = readSensorForTemperature(file)
-            time.sleep(1)  # wait for 1 second
-            return temp  # return the temperature
-    if (count == 0):
-        print("No sensors found")  # Display that there is no sensor found
-
+    try: 
+        global temperature
+        count = 0
+        sensor = ""
+        for file in os.listdir("/sys/bus/w1/devices"):
+            if file.startswith("28-"):
+                count = count + 1  # increment the count by 1
+                # read the temperature of the sensor
+                temp = readSensorForTemperature(file)
+                time.sleep(1)  # wait for 1 second
+                return temp  # return the temperature
+        if (count == 0):
+            print("No sensors found")  # Display that there is no sensor found
+    except KeyboardInterrupt: 
+        destroy()
 
 ######################################
 
@@ -113,7 +123,7 @@ def sendCommand(cmd):
 
 def TM1638_init():
     GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BOARD)
+    #GPIO.setmode(GPIO.BOARD)
     GPIO.setup(DIO, GPIO.OUT)
     GPIO.setup(CLK, GPIO.OUT)
     GPIO.setup(STB, GPIO.OUT)
@@ -147,30 +157,28 @@ def numberDisplay(num):
 
 
 def photoresistor():
+    timerStart = None
+    #global light  # put the variable light as global to be changed by the method
+    light = ADC0832.getResult()  # read the light sensor
+    time.sleep(1)  # wait for 1 second
+    # print("Light: " + str(light))  # print the light sensor
+    print("light status", light)
+    if light >= 40:
+        timerStart = datetime.datetime.utcnow() - datetime.timedelta(hours=4)  # get the current time
+        dayStart = date.today()  # get the current day
+        GPIO.output(LEDPIN, GPIO.HIGH)
+    else:
 
-    while True:
+        turnOnRedLight()  # turn on red light
 
-        global light  # put the variable light as global to be changed by the method
-        GPIO.setup(LIGHTPIN, GPIO.IN)  # set the light as input
-        light = GPIO.input(LIGHTPIN)  # read the light sensor
-        time.sleep(1)  # wait for 1 second
-        # print("Light: " + str(light))  # print the light sensor
+        if (timerStart != None):
+            timerEnd = datetime.datetime.now().strftime(format)  # get the current time
+            dayFinish = date.today()  # get the current day
 
-        if light == 1:
-            timerStart = datetime.now().strftime(format)  # get the current time
-            dayStart = date.today()  # get the current day
-        else:
-
-            turnOnRedLight()  # turn on red light
-
-            if (timerStart != None):
-                timerEnd = datetime.now().strftime(format)  # get the current time
-                dayFinish = date.today()  # get the current day
-
-                if (dayStart == dayFinish):
-                    lightTimeForDay = timerEnd - timerStart  # get the time the light was on for
-                    # Call the write to file function to write the data to the file
-                    WriteToFile(dayStart, lightTimeForDay)
+            if (dayStart == dayFinish):
+                lightTimeForDay = timerEnd - timerStart  # get the time the light was on for
+                # Call the write to file function to write the data to the file
+                WriteToFile(dayStart, lightTimeForDay)
 
      
 
@@ -185,8 +193,11 @@ def distanceSensor():
     GPIO.output(TRIG, True)
     time.sleep(0.00001)
     GPIO.output(TRIG, False)
+    #time.sleep(0.01)
     while GPIO.input(ECHO) == 0:
+        print("Starting pulse")
         pulse_start = time.time()
+        pass
     while GPIO.input(ECHO) == 1:
         pulse_end = time.time()
     pulse_duration = pulse_end - pulse_start
@@ -206,8 +217,9 @@ def WriteToFile(day, lightTimeForDay):
 
 
 def destroy():
+    ADC0832.destroy()
 
-    GPIO.output(LEDPIN, GPIO.HIGH)  # turn off led
+    GPIO.output(LEDPIN, GPIO.LOW)  # turn off led
     GPIO.cleanup()  # Release resource
 
 
@@ -215,22 +227,28 @@ def destroy():
 def main():
     print("I love Sach")
     while True:
-        try: 
-            temp = temperature()
-            numberDisplay(temp)
+        try:
+            temp = Temperature()
+            print(temp)
+            numberDisplay(float(temp))
             distance = distanceSensor()
-            if distance < 10:
-                time = datetime.now().strftime(format)  # get the current time
-                date = datetime.now().strftime(formatDay)
-                dateTime = time + " the " + date
-                SendSMS(CLIENT_PHONE, temp,  dateTime)
+            photoresistor()
+            if distance < 30:
+                timeOfDay = datetime.datetime.utcnow() - datetime.timedelta(hours=4)  # get the current time
+                dateResult = date.today()
+                resultDateTime = str(timeOfDay)
+                SendSMS(CLIENT_PHONE, temp,  resultDateTime)
             else:
                 print("No SMS sent")
-        except: 
+        except:
+            timeOfDay = datetime.datetime.utcnow() - datetime.timedelta(hours=4)  # get the current time
+            dateResult = date.today() # Get the current date
+            resultDateTime = str(timeOfDay)
             print("Error contacting user ...")
-            SendSMS(CLIENT_PHONE, temp,  dateTime, error=True)
+            SendSMS(CLIENT_PHONE, temp,  resultDateTime, error=True)
             time.sleep(1)
             destroy()
+
 
 if __name__ == "__main__":
     try:

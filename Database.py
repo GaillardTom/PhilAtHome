@@ -1,7 +1,8 @@
 import pymongo
 from bson.objectid import ObjectId
 import os 
-
+import datetime
+from datetime import date
 
 
 PATH = "/data.txt"
@@ -38,14 +39,25 @@ def insertToDb():
 
     
 def FetchData():
+    # Connect to the database
     coll = ConnToDb()
-    # df = pd.DataFrame(coll)
+   
+    # Get the date from today and from a week ago
+    dateToday = date.today()
+    dateWeekAgo = dateToday - datetime.timedelta(days=7)
+    
+    # Fetch the data from the database that is between the two dates
     doc = list(
         coll.aggregate([
-        {"$match": {"_id": {"$week": "$Day"}}},
-        {"$group": {"_id": "$Day", "LightTimeToday": {"$sum": "$LightTimeToday"}}}
-        ]
-    ))
+        {"$match": {"Day": {"$gte": dateWeekAgo, "$lte": dateToday}}},
+        {"$group": {"_id": "null", "LightTimeToday": {"$sum": "$LightTimeToday"}}}])
+        
+    )
     
-    return doc
+    time = doc[0]["LightTimeToday"] # Get the time from the document
+    
+    # Return the data
+    return time
+    
+    
 
