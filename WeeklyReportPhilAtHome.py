@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
+
+
 from SendSMS import SendSMS, SendWeeklyLog
 from Database import FetchData
-
-CLIENT_PHONE = "+33 7 67 02 75 15"
-
+import os
+#CLIENT_PHONE = "+33 7 67 02 75 15"
+CLIENT_PHONE = os.environ.get("CLIENT_PHONE")
 
 def CheckWeeklyLightTime():
     data = FetchData()  # get the data from the file

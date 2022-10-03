@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 from tkinter import E
 import pymongo
@@ -7,16 +8,23 @@ import datetime
 from datetime import date
 
 
-PATH = "data/lightTime.txt"
+PATH = "/home/pi/PhilAtHome/data/lightTime.txt"
 DBSTRING = os.environ.get("DBSTRING")
 
 
 def OpenFile():
+    data = []
+
     if os.path.exists(PATH):
+
         with open(PATH, "r") as f:
-            data = f.readline()
-            data.split(" ")
-            return data
+            #print(f.read()
+            print("TEST")
+            data = [line.rstrip('\n').lstrip('\n') for line in f.readlines()]
+            for entry in data: 
+                print(entry)
+           
+        return data
     else:
         return None
 
@@ -34,13 +42,22 @@ def ConnToDb():
 def insertToDb():
     mydb = ConnToDb()
     data = OpenFile()
+    print(data)
+    
 
-    data = data.split(" ")  # split the data by the space
-    mydict = {"Day": data[0], "LightTimeToday": datetime.datetime.strptime(data[1], "%H:%M:%S")}
+    for entry in data: 
+        print("TESTING SPLITTING", entry.split(" "))
+        dayTime = (entry.replace("\\n", "").split(" "))
+        if dayTime != None or dayTime != [""]: #or dayTime[1] != "" or dayTime != "":
+            print("CURENTDAYTIME", dayTime)
+            try: 
+                day, time = dayTime[0], dayTime[1]
+            except:
+                break
+            mydict = {"Day": day, "LightTimeToday": datetime.datetime.strptime(time, "%H:%M:%S")}
 
-    x = mydb.insert_one(mydict)
+            mydb.insert_one(mydict)
     os.remove(PATH)
-    return ObjectId(x.inserted_id)
 
 
 def FetchData():

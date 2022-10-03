@@ -1,0 +1,10 @@
+TEST
+2022-10-03 0:00:15
+2022-10-03 0:00:05
+2022-10-03 0:00:10
+2022-10-03 0:01:14
+['2022-10-03 0:00:15', '2022-10-03 0:00:05', '2022-10-03 0:00:10', '2022-10-03 0:01:14']
+TESTING SPLITTING ['2022-10-03', '0:00:15']
+CURENTDAYTIME ['2022-10-03', '0:00:15']
+localhost:27017: [Errno 111] Connection refused, Timeout: 30s, Topology Description: <TopologyDescription id: 633a708faba485624be31adc, topology_type: Unknown, servers: [<ServerDescription ('localhost', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('localhost:27017: [Errno 111] Connection refused')>]>
+Error while inserting to DB

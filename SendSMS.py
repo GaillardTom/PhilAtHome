@@ -1,4 +1,6 @@
 
+#!/usr/bin/env python3
+
 import os
 from twilio.rest import Client
 
@@ -23,7 +25,7 @@ def SendSMS(numToSend, temp, timeDate, error=False):
     message = client.messages \
                     .create(
                         body=messageBody,
-                        from_='+12182506623',
+                        from_='+19895751665',
                         to=numToSend
                     )
 
@@ -34,7 +36,7 @@ def SendWeeklyLog(numToSend, timePassed):
     message = client.messages \
                     .create(
                         body=messageBody,
-                        from_='+12182506623',
+                        from_='+19895751665',
                         to=numToSend
                     )
 

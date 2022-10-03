@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 from SendSMS import SendSMS
 import RPi.GPIO as GPIO
 import time
@@ -29,7 +32,8 @@ temperature = 0  # declare temperature variable
 format = "%H:%M:%S"
 formatDay = "%d-%m-%Y"
 global timerStart
-
+global count 
+count = 0
 # SETUP GPIO
 def SetupGPIO():
     GPIO.setmode(GPIO.BCM)
@@ -158,16 +162,18 @@ def numberDisplay(num):
 def photoresistor():
     global timerStart
     global dayStart
+    global count
     # global light  # put the variable light as global to be changed by the method
     light = ADC0832.getResult()  # read the light sensor
     time.sleep(1)  # wait for 1 second
     # print("Light: " + str(light))  # print the light sensor
     print("light status", light)
-    if light >= 40:
+    if (light >= 40 and count == 0):
         timerStart = datetime.datetime.now().strftime(format)  # get the current time
+        count += 1 
         dayStart = date.today()  # get the current day
         GPIO.output(LEDPIN, GPIO.HIGH)
-    else:
+    elif(light < 40 and count != 0):
 
         turnOnRedLight()  # turn on red light
         print("Turning on led")
@@ -188,6 +194,7 @@ def photoresistor():
                 WriteToFile(str(dayStart), str(lightTimeForDay))
                 timerStart = None
                 dayStart = None
+                count = 0
 
 
 # TODO - ADD DISTANCE SENSOR AND SEND SMS WHEN DISTANCE IS LESS THAN 10CM
@@ -227,9 +234,9 @@ def distanceSensor():
 
 def WriteToFile(day, lightTimeForDay):
     # Open the file in append & read mode ('a+')
-    f = open("./data/lightTime.txt", "a+")
+    f = open("/home/pi/PhilAtHome/data/lightTime.txt", "a")
     # Write text to file day + time of light turned on
-    f.write( day + " " + lightTimeForDay + " \n")
+    f.write(day + " " + lightTimeForDay + "\n")
     # Close the file
     f.close()
 
@@ -239,15 +246,18 @@ def destroy():
     ADC0832.destroy()
 
     GPIO.cleanup()  # Release resource
-    exit(1)
+
+    
 
 
 # MAIN LOOP FUNCTION
 def main():
     global timerStart
     global dayStart 
+    global count
     timerStart = None
     dayStart = None
+    count = 0
     print("I love Sach")
     while True:
         try:
@@ -274,6 +284,7 @@ def main():
             SendSMS(CLIENT_PHONE, temp,  resultDateTime, error=True)
             time.sleep(1)
             destroy()
+            exit(1)
 
 
 if __name__ == "__main__":
@@ -282,4 +293,6 @@ if __name__ == "__main__":
         while True:
             main()
     except (KeyboardInterrupt):
+        destroy()
         print("Exit Program")
+        exit(1)
