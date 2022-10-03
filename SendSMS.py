@@ -14,7 +14,7 @@ from twilio.rest import Client
 account_sid = os.environ.get("account_sid")
 auth_token = os.environ.get("auth_token")
 client = Client(account_sid, auth_token)
-
+CLIENT_PHONE = os.environ.get("CLIENT_PHONE")
 
 def SendSMS(numToSend, temp, timeDate, error=False): 
     if error:
@@ -50,6 +50,6 @@ def SendWeeklyLog(numToSend, timePassed):
 
 if __name__ == "__main__":
     try:
-        SendSMS("+1 438 396 4381", 25, "12:00 Sept 9 2022")
+        SendSMS(CLIENT_PHONE, 25, "12:00 Sept 9 2022")
     except:
         print("Error")

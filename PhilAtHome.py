@@ -7,7 +7,6 @@ import time
 import os
 import datetime
 import math
-from Database import FetchData
 
 import ADC0832
 from datetime import date
